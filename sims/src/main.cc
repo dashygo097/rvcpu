@@ -17,7 +17,6 @@ void print_usage(const char *prog) {
   std::cout << "  -d, --dump-regs      Dump registers after execution\n";
   std::cout << "  -m, --dump-mem <addr> <size>  Dump memory region\n";
   std::cout << "\nSupported file formats:\n";
-  std::cout << "  .hex                 Intel HEX or Verilog HEX\n";
   std::cout << "  .bin                 Raw binary\n";
   std::cout << "  .elf                 ELF executable\n";
   std::cout << std::endl;
@@ -29,7 +28,6 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  // Parse command line arguments
   std::string program_file;
   bool verbose = false;
   bool enable_trace = false;
@@ -90,9 +88,7 @@ int main(int argc, char **argv) {
   std::cout << "Loading program: " << program_file << std::endl;
 
   bool loaded = false;
-  if (program_file.substr(program_file.find_last_of(".") + 1) == "hex") {
-    loaded = sim.load_hex(program_file);
-  } else if (program_file.substr(program_file.find_last_of(".") + 1) == "bin") {
+  if (program_file.substr(program_file.find_last_of(".") + 1) == "bin") {
     loaded = sim.load_bin(program_file, base_addr);
   } else if (program_file.substr(program_file.find_last_of(".") + 1) == "elf") {
     loaded = sim.load_elf(program_file);
@@ -106,7 +102,6 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  // Reset and run
   std::cout << "Resetting CPU..." << std::endl;
   sim.reset();
 
@@ -143,8 +138,8 @@ int main(int argc, char **argv) {
   }
 
   if (enable_trace) {
-    sim.save_trace("execution_trace.log");
-    std::cout << "Trace saved to execution_trace.log\n";
+    sim.save_trace("trace.log");
+    std::cout << "Trace saved to trace.log\n";
   }
 
   return 0;

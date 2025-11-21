@@ -1,6 +1,7 @@
-#ifndef CPU_SIM_H
-#define CPU_SIM_H
+#pragma once
 
+#include "./memory.hh"
+#include "./trace.hh"
 #include "Vrv32_cpu.h"
 #include "verilated.h"
 #include <cstdint>
@@ -12,15 +13,11 @@
 #include "verilated_vcd_c.h"
 #endif
 
-class Memory;
-class ExecutionTrace;
-
 class CPUSimulator {
 public:
   CPUSimulator(bool enable_trace = false);
   ~CPUSimulator();
 
-  bool load_hex(const std::string &filename);
   bool load_bin(const std::string &filename, uint32_t base_addr = 0);
   bool load_elf(const std::string &filename);
 
@@ -34,12 +31,12 @@ public:
   uint32_t read_mem(uint32_t addr) const;
   void write_mem(uint32_t addr, uint32_t data);
 
-  uint64_t get_cycle_count() const { return cycle_count_; }
-  uint64_t get_inst_count() const { return inst_count_; }
+  uint64_t get_cycle_count() const { return _cycle_count; }
+  uint64_t get_inst_count() const { return _inst_count; }
   double get_ipc() const;
 
   void set_verbose(bool verbose) { verbose_ = verbose; }
-  void set_timeout(uint64_t timeout) { timeout_ = timeout; }
+  void set_timeout(uint64_t timeout) { _timeout = timeout; }
   void enable_profiling(bool enable) { profiling_ = enable; }
 
   void dump_registers() const;
@@ -47,19 +44,19 @@ public:
   void save_trace(const std::string &filename);
 
 private:
-  std::unique_ptr<Vrv32_cpu> dut_;
-  std::unique_ptr<Memory> imem_;
-  std::unique_ptr<Memory> dmem_;
+  std::unique_ptr<Vrv32_cpu> _dut;
+  std::unique_ptr<Memory> _imem;
+  std::unique_ptr<Memory> _dmem;
   std::unique_ptr<ExecutionTrace> trace_;
 
 #ifdef ENABLE_TRACE
-  std::unique_ptr<VerilatedVcdC> vcd_;
+  std::unique_ptr<VerilatedVcdC> _vcd;
 #endif
 
-  uint64_t time_counter_;
-  uint64_t cycle_count_;
-  uint64_t inst_count_;
-  uint64_t timeout_;
+  uint64_t _time_counter;
+  uint64_t _cycle_count;
+  uint64_t _inst_count;
+  uint64_t _timeout;
 
   bool verbose_;
   bool profiling_;
@@ -72,5 +69,3 @@ private:
   void update_stats();
   void check_termination();
 };
-
-#endif // CPU_SIM_H

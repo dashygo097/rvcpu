@@ -20,7 +20,6 @@ set(SIMULATOR_SOURCES
   memory.cc
   instruction.cc
   elf_loader.cc
-  hex_loader.cc
   trace.cc
 )
 

@@ -1,8 +1,9 @@
 #include "trace.hh"
+#include <fstream>
 #include <iostream>
 
 void ExecutionTrace::add_entry(const TraceEntry &entry) {
-  entries_.push_back(entry);
+  _entries.push_back(entry);
 }
 
 void ExecutionTrace::save(const std::string &filename) const {
@@ -14,7 +15,7 @@ void ExecutionTrace::save(const std::string &filename) const {
 
   file << "Cycle,PC,Instruction,Disassembly,Reg,Value\n";
 
-  for (const auto &entry : entries_) {
+  for (const auto &entry : _entries) {
     file << std::dec << entry.cycle << ","
          << "0x" << std::hex << std::setw(8) << std::setfill('0') << entry.pc
          << ","
@@ -35,4 +36,4 @@ void ExecutionTrace::save(const std::string &filename) const {
   std::cout << "Execution trace saved to " << filename << std::endl;
 }
 
-void ExecutionTrace::clear() { entries_.clear(); }
+void ExecutionTrace::clear() { _entries.clear(); }

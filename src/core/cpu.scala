@@ -7,11 +7,11 @@ import utils._
 class RV32CPU extends Module {
   override def desiredName: String = s"rv32_cpu"
 
-  // External instruction memory interface
+  // Memory Interface
   val imem_addr = IO(Output(UInt(32.W)))
   val imem_inst = IO(Input(UInt(32.W)))
   
-  // Debug outputs
+  // Debug
   val debug_pc = IO(Output(UInt(32.W)))
   val debug_inst = IO(Output(UInt(32.W)))
   val debug_reg_write = IO(Output(Bool()))
@@ -24,15 +24,15 @@ class RV32CPU extends Module {
   val regfile = Module(new RV32RegFile)
   val data_mem = Module(new RV32GloblMem(32, 32, 1024, 0x80000000L))
 
-  // Program Counter
+  // PC
   val pc = RegInit(0.U(32.W))
   val next_pc = Wire(UInt(32.W))
 
-  // IF - Instruction Fetch
+  // IF
   imem_addr := pc
   val inst = imem_inst
 
-  // ID - Instruction Decode
+  // ID
   val funct7 = inst(31, 25)
   val rs2 = inst(24, 20)
   val rs1 = inst(19, 15)
@@ -40,19 +40,16 @@ class RV32CPU extends Module {
   val rd = inst(11, 7)
   val opcode = inst(6, 0)
 
-  // Control signals
   ctrl_unit.inst := inst
   val alu_ctrl = ctrl_unit.alu_ctrl
   val mem_ctrl = ctrl_unit.mem_ctrl
 
-  // Immediate generation
   val imm_i = Cat(Fill(21, inst(31)), inst(30, 20))
   val imm_s = Cat(Fill(21, inst(31)), inst(30, 25), inst(11, 7))
   val imm_b = Cat(Fill(20, inst(31)), inst(7), inst(30, 25), inst(11, 8), 0.U(1.W))
   val imm_u = Cat(inst(31, 12), Fill(12, 0.U))
   val imm_j = Cat(Fill(12, inst(31)), inst(19, 12), inst(20), inst(30, 21), 0.U(1.W))
 
-  // Select immediate based on instruction type
   val imm = MuxCase(0.U, Seq(
     (opcode === "b0010011".U) -> imm_i,  // I-type (ALU)
     (opcode === "b0000011".U) -> imm_i,  // I-type (Load)
@@ -64,15 +61,13 @@ class RV32CPU extends Module {
     (opcode === "b1100111".U) -> imm_i   // I-type (JALR)
   ))
 
-  // Register file read
   regfile.rs1_addr := rs1
   regfile.rs2_addr := rs2
   val rs1_data = regfile.rs1_data
   val rs2_data = regfile.rs2_data
 
-  // EX - Execute
+  // EX
   
-  // ALU source selection
   val alu_src1 = MuxCase(rs1_data, Seq(
     (opcode === "b0010111".U) -> pc,  // AUIPC
     (opcode === "b1101111".U) -> pc,  // JAL
@@ -100,7 +95,6 @@ class RV32CPU extends Module {
 
   val alu_result = alu.rd
 
-  // Branch condition checking
   val branch_taken = MuxCase(false.B, Seq(
     (funct3 === "b000".U) -> (rs1_data === rs2_data),  // BEQ
     (funct3 === "b001".U) -> (rs1_data =/= rs2_data),  // BNE
@@ -110,16 +104,15 @@ class RV32CPU extends Module {
     (funct3 === "b111".U) -> (rs1_data >= rs2_data)  // BGEU
   )) && (opcode === "b1100011".U)
 
-  // MEM - Memory Access
+  // MEM
   data_mem.mem_ctrl := mem_ctrl
   data_mem.write_addr := alu_result
   data_mem.write_data := rs2_data
   data_mem.read_addr := alu_result
   val mem_data = data_mem.read_data
 
-  // WB - Write Back
+  // WB
   
-  // Data to write back to register
   val wb_data = MuxCase(alu_result, Seq(
     (opcode === "b0000011".U) -> mem_data,  // Load
     (opcode === "b0110111".U) -> imm,  // LUI
@@ -127,7 +120,6 @@ class RV32CPU extends Module {
     (opcode === "b1100111".U) -> (pc + 4.U)   // JALR
   ))
 
-  // Register write enable
   val reg_write = MuxCase(false.B, Seq(
     (opcode === "b0110011".U) -> true.B,  // R-type
     (opcode === "b0010011".U) -> true.B,  // I-type ALU

@@ -12,3 +12,8 @@ target/
 obj_dir/
 logs/
 synth/
+
+sims/tests/elf
+sims/tests/bin
+sims/tests/hex
+sims/tests/dump

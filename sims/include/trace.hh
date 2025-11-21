@@ -1,23 +1,21 @@
-#ifndef TRACE_H
-#define TRACE_H
+#pragma once
 
 #include <cstdint>
-#include <fstream>
 #include <string>
 #include <vector>
 
+struct TraceEntry {
+  uint64_t cycle;
+  uint32_t pc;
+  uint32_t inst;
+  std::string disasm;
+  uint8_t rd;
+  uint32_t rd_val;
+  bool rd_written;
+};
+
 class ExecutionTrace {
 public:
-  struct TraceEntry {
-    uint64_t cycle;
-    uint32_t pc;
-    uint32_t inst;
-    std::string disasm;
-    uint8_t rd;
-    uint32_t rd_val;
-    bool rd_written;
-  };
-
   ExecutionTrace() = default;
   ~ExecutionTrace() = default;
 
@@ -25,11 +23,12 @@ public:
   void save(const std::string &filename) const;
   void clear();
 
-  size_t size() const { return entries_.size(); }
-  const TraceEntry &operator[](size_t idx) const { return entries_[idx]; }
+  [[nodiscard]] const TraceEntry &operator[](size_t idx) const {
+    return _entries[idx];
+  }
+
+  [[nodiscard]] size_t size() const noexcept { return _entries.size(); }
 
 private:
-  std::vector<TraceEntry> entries_;
+  std::vector<TraceEntry> _entries;
 };
-
-#endif // TRACE_H

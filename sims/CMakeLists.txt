@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release)
+  set(CMAKE_BUILD_TYPE Release)
 endif()
 
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -Wall -Wextra")
@@ -13,43 +13,37 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall")
 
 find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM)
-    set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
-    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
-    message(STATUS "Using ccache: ${CCACHE_PROGRAM}")
+  set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+  set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+  message(STATUS "Using ccache: ${CCACHE_PROGRAM}")
 endif()
 
 if(APPLE)
-    set(IS_APPLE TRUE)
-    message(STATUS "Building on macOS")
+  set(IS_APPLE TRUE)
+  message(STATUS "Building on macOS")
 elseif(WIN32)
-    set(IS_WINDOWS TRUE)
-    message(STATUS "Building on Windows")
+  set(IS_WINDOWS TRUE)
+  message(STATUS "Building on Windows")
 else()
-    set(IS_UNIX TRUE)
-    message(STATUS "Building on Unix-like system")
+  set(IS_UNIX TRUE)
+  message(STATUS "Building on Unix-like system")
 endif()
 
 # Colored printing
-function(print_info MSG COLOR)
-  if(CMAKE_COLOR_MAKEFILE)
-    execute_process(COMMAND printf "\\033[1;${COLOR}m${MSG}\\033[0m\n")
-  else()
-    message(STATUS "${MSG}")
-  endif()
+function(print_info MSG COLOR FONT)
+  execute_process(COMMAND printf "\\033[1;${COLOR}m\\033[${FONT}m${MSG}\\033[0m\n")
 endfunction()
-                 
 
 # 3rdparty 
 include_directories(3rdparty)
 
 find_package(verilator HINTS $ENV{VERILATOR_ROOT})
 if(NOT verilator_FOUND)
-    message(FATAL_ERROR "Verilator not found. Please install Verilator or set VERILATOR_ROOT")
+  message(FATAL_ERROR "Verilator not found. Please install Verilator or set VERILATOR_ROOT")
 endif()
 
 option(ENABLE_TRACE "Enable VCD tracing" ON)
-option(ENABLE_COVERAGE "Enable coverage collection" OFF)
-option(BUILD_TESTS "Build test programs" OFF)
+option(ENABLE_COVERAGE "Enable coverage collection" ON)
 
 # rvsim 
 include_directories(${CMAKE_SOURCE_DIR}/include)
@@ -82,21 +76,14 @@ file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 add_subdirectory(src)
 
 # Stastics
-print_info("――――――――――――――――――APP SCOPE――――――――――――――――――" "0")
-
-# Test
-if(BUILD_TESTS)
-  enable_testing()
-  add_subdirectory(tests)
-endif()
+print_info("――――――――――――――――――APP SCOPE――――――――――――――――――" "0" "1")
 
 # App
 install(TARGETS rv32_cpu_verilated DESTINATION bin)
-print_info("Configuration: " "92")
-print_info("  Build Type: ${CMAKE_BUILD_TYPE}" "92")
-print_info("  C++ Compiler: ${CMAKE_CXX_COMPILER}" "92")
-print_info("  Verilator: ${VERILATOR_ROOT}" "92")
-print_info("  RTL Source: ${RTL_SOURCES}" "92")
-print_info("  Enable Trace: ${ENABLE_TRACE}" "92")
-print_info("  Enable Coverage: ${ENABLE_COVERAGE}" "92")
-print_info("  Enable Tests: ${BUILD_TESTS}" "92")
+print_info("Configuration: " "92" "0")
+print_info("  Build Type: ${CMAKE_BUILD_TYPE}" "92" "1")
+print_info("  C++ Compiler: ${CMAKE_CXX_COMPILER}" "92" "1")
+print_info("  Verilator: ${VERILATOR_ROOT}" "92" "1")
+print_info("  RTL Source: ${RTL_SOURCES}" "92" "1")
+print_info("  Enable Trace: ${ENABLE_TRACE}" "94" "2")
+print_info("  Enable Coverage: ${ENABLE_COVERAGE}" "94" "2")
