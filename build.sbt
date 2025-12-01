@@ -17,18 +17,16 @@ ThisBuild / scalacOptions ++= Seq(
   "-Ymacro-annotations"
 )
 
-lazy val core = (project in file("src/core"))
+lazy val core = (project in file("core"))
   .settings(
     name := "core",
     libraryDependencies ++= Seq(
       "dashygo097"        %% "utils"  % "0.1.0",
-      "dashygo097"        %% "dds"    % "0.1.0",
       "dashygo097"        %% "dsp"    % "0.1.0",
       "dashygo097"        %% "math"   % "0.1.0",
       "dashygo097"        %% "com"    % "0.1.0",
       "dashygo097"        %% "mem"    % "0.1.0",
       "dashygo097"        %% "perip"  % "0.1.0",
-      "dashygo097"        %% "mod"    % "0.1.0",
       "org.chipsalliance" %% "chisel" % chiselVersion,
     ),
     Compile / unmanagedSourceDirectories += baseDirectory.value,
