@@ -10,6 +10,7 @@
 
 - sbt version in this project: 1.10.11 (see **project/build.properties**)
 - see chisel/scala version in **build.sbt**
+- **Make sure you installed [Vopts](https://github.com/dashygo097/Vopts.git)**
 
 #### Autotest:
 
