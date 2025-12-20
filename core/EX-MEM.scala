@@ -1,5 +1,7 @@
 package core
+
 import chisel3._
+
 class EX_MEM extends Module {
   override def desiredName: String = s"ex_mem"
 

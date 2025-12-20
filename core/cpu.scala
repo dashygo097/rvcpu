@@ -1,9 +1,10 @@
 package core
 
-import core.ex._
+import common._
+import ex._
+import utils._
 import chisel3._
 import chisel3.util._
-import utils._
 
 class RV32CPU extends Module {
   override def desiredName: String = s"rv32_cpu"
