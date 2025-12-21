@@ -88,9 +88,9 @@ class RV32CPU extends Module {
   val wb_forward_rs2  = mem_wb.WB_REG_WRITE && (mem_wb.WB_RD =/= 0.U) && (mem_wb.WB_RD === id_rs2)
 
   // Branch/Jump control
-  val id_is_branch = id_opcode === "b1100011".U
-  val id_is_jal    = id_opcode === "b1101111".U
-  val id_is_jalr   = id_opcode === "b1100111".U
+  val id_is_branch = id_opcode === "b1100011".U // Branch
+  val id_is_jal    = id_opcode === "b1101111".U // JAL
+  val id_is_jalr   = id_opcode === "b1100111".U // JALR
 
   // Load-use hazard detection
   val load_use_hazard    = id_ex.EX_MEM_READ &&
@@ -135,12 +135,12 @@ class RV32CPU extends Module {
   val id_branch_taken = MuxCase(
     false.B,
     Seq(
-      (id_funct3 === "b000".U) -> (id_rs1_data === id_rs2_data),
-      (id_funct3 === "b001".U) -> (id_rs1_data =/= id_rs2_data),
-      (id_funct3 === "b100".U) -> (id_rs1_data.asSInt < id_rs2_data.asSInt),
-      (id_funct3 === "b101".U) -> (id_rs1_data.asSInt >= id_rs2_data.asSInt),
-      (id_funct3 === "b110".U) -> (id_rs1_data < id_rs2_data),
-      (id_funct3 === "b111".U) -> (id_rs1_data >= id_rs2_data)
+      (id_funct3 === "b000".U) -> (id_rs1_data === id_rs2_data),              // BEQ
+      (id_funct3 === "b001".U) -> (id_rs1_data =/= id_rs2_data),              // BNE
+      (id_funct3 === "b100".U) -> (id_rs1_data.asSInt < id_rs2_data.asSInt),  // BLT
+      (id_funct3 === "b101".U) -> (id_rs1_data.asSInt >= id_rs2_data.asSInt), // BGE
+      (id_funct3 === "b110".U) -> (id_rs1_data < id_rs2_data),                // BLTU
+      (id_funct3 === "b111".U) -> (id_rs1_data >= id_rs2_data)                // BGEU
     )
   ) && id_is_branch
 
@@ -149,18 +149,18 @@ class RV32CPU extends Module {
   val id_reg_write = MuxCase(
     false.B,
     Seq(
-      (id_opcode === "b0110011".U) -> true.B,
-      (id_opcode === "b0010011".U) -> true.B,
-      (id_opcode === "b0000011".U) -> true.B,
-      (id_opcode === "b0110111".U) -> true.B,
-      (id_opcode === "b0010111".U) -> true.B,
-      (id_opcode === "b1101111".U) -> true.B,
-      (id_opcode === "b1100111".U) -> true.B
+      (id_opcode === "b0110011".U) -> true.B, // R-type
+      (id_opcode === "b0010011".U) -> true.B, // I-type ALU
+      (id_opcode === "b0000011".U) -> true.B, // Load
+      (id_opcode === "b0110111".U) -> true.B, // LUI
+      (id_opcode === "b0010111".U) -> true.B, // AUIPC
+      (id_opcode === "b1101111".U) -> true.B, // JAL
+      (id_opcode === "b1100111".U) -> true.B  // JALR
     )
   )
 
-  val id_mem_read  = id_opcode === "b0000011".U
-  val id_mem_write = id_opcode === "b0100011".U
+  val id_mem_read  = id_opcode === "b0000011".U // Load
+  val id_mem_write = id_opcode === "b0100011".U // Store
 
   // ID/EX
   id_ex.STALL        := stall
@@ -207,22 +207,22 @@ class RV32CPU extends Module {
   val ex_alu_src1 = MuxCase(
     ex_rs1_data_forwarded,
     Seq(
-      (ex_opcode === "b0010111".U) -> ex_pc,
-      (ex_opcode === "b1101111".U) -> ex_pc,
-      (ex_opcode === "b1100111".U) -> ex_rs1_data_forwarded
+      (ex_opcode === "b0010111".U) -> ex_pc,                // AUIPC
+      (ex_opcode === "b1101111".U) -> ex_pc,                // JAL
+      (ex_opcode === "b1100111".U) -> ex_rs1_data_forwarded // JALR
     )
   )
 
   val ex_alu_src2 = MuxCase(
     ex_rs2_data_forwarded,
     Seq(
-      (ex_opcode === "b0010011".U) -> ex_imm,
-      (ex_opcode === "b0000011".U) -> ex_imm,
-      (ex_opcode === "b0100011".U) -> ex_imm,
-      (ex_opcode === "b0110111".U) -> 0.U,
-      (ex_opcode === "b0010111".U) -> ex_imm,
-      (ex_opcode === "b1101111".U) -> 4.U,
-      (ex_opcode === "b1100111".U) -> 4.U
+      (ex_opcode === "b0010011".U) -> ex_imm, // I-type ALU
+      (ex_opcode === "b0000011".U) -> ex_imm, // Load
+      (ex_opcode === "b0100011".U) -> ex_imm, // Store
+      (ex_opcode === "b0110111".U) -> 0.U,    // LUI
+      (ex_opcode === "b0010111".U) -> ex_imm, // AUIPC
+      (ex_opcode === "b1101111".U) -> 4.U,    // JAL
+      (ex_opcode === "b1100111".U) -> 4.U     // JALR
     )
   )
 
@@ -231,10 +231,10 @@ class RV32CPU extends Module {
   alu.alu_ctrl := MuxCase(
     id_ex.EX_ALU_CTRL,
     Seq(
-      (ex_opcode === "b0110111".U) -> ALUOp.ADD,
-      (ex_opcode === "b0010111".U) -> ALUOp.ADD,
-      (ex_opcode === "b1101111".U) -> ALUOp.ADD,
-      (ex_opcode === "b1100111".U) -> ALUOp.ADD
+      (ex_opcode === "b0110111".U) -> ALUOp.ADD, // LUI
+      (ex_opcode === "b0010111".U) -> ALUOp.ADD, // AUIPC
+      (ex_opcode === "b1101111".U) -> ALUOp.ADD, // JAL
+      (ex_opcode === "b1100111".U) -> ALUOp.ADD  // JALR
     )
   )
 
@@ -270,39 +270,39 @@ class RV32CPU extends Module {
   val mem_byte_addr          = mem_alu_result(1, 0)
   val mem_aligned_write_data = MuxLookup(mem_funct3, mem_rs2_data)(
     Seq(
-      "b000".U -> (mem_rs2_data << (mem_byte_addr << 3)),
-      "b001".U -> (mem_rs2_data << (mem_byte_addr(1) << 4)),
-      "b010".U -> mem_rs2_data
+      "b000".U -> (mem_rs2_data << (mem_byte_addr << 3)),    // SB
+      "b001".U -> (mem_rs2_data << (mem_byte_addr(1) << 4)), // SH
+      "b010".U -> mem_rs2_data                               // SW
     )
   )
   DMEM_WRITE_DATA := mem_aligned_write_data
 
   DMEM_WRITE_STRB := MuxLookup(mem_funct3, 0.U)(
     Seq(
-      "b000".U -> ("b0001".U << mem_byte_addr),
-      "b001".U -> ("b0011".U << (mem_byte_addr(1) << 1)),
-      "b010".U -> "b1111".U
+      "b000".U -> ("b0001".U << mem_byte_addr),           // SB
+      "b001".U -> ("b0011".U << (mem_byte_addr(1) << 1)), // SH
+      "b010".U -> "b1111".U                               // SW
     )
   )
 
   val mem_shifted_read_data = DMEM_READ_DATA >> (mem_byte_addr << 3)
   val mem_data              = MuxLookup(mem_funct3, 0.U)(
     Seq(
-      "b000".U -> Cat(Fill(24, mem_shifted_read_data(7)), mem_shifted_read_data(7, 0)),
-      "b001".U -> Cat(Fill(16, mem_shifted_read_data(15)), mem_shifted_read_data(15, 0)),
-      "b010".U -> DMEM_READ_DATA,
-      "b100".U -> Cat(Fill(24, 0.U), mem_shifted_read_data(7, 0)),
-      "b101".U -> Cat(Fill(16, 0.U), mem_shifted_read_data(15, 0))
+      "b000".U -> Cat(Fill(24, mem_shifted_read_data(7)), mem_shifted_read_data(7, 0)),   // LB
+      "b001".U -> Cat(Fill(16, mem_shifted_read_data(15)), mem_shifted_read_data(15, 0)), // LH
+      "b010".U -> DMEM_READ_DATA,                                                         // LW
+      "b100".U -> Cat(Fill(24, 0.U), mem_shifted_read_data(7, 0)),                        // LBU
+      "b101".U -> Cat(Fill(16, 0.U), mem_shifted_read_data(15, 0))                        // LHU
     )
   )
 
   val mem_wb_data = MuxCase(
     mem_alu_result,
     Seq(
-      (mem_opcode === "b0000011".U) -> mem_data,
-      (mem_opcode === "b0110111".U) -> ex_mem.MEM_IMM,
-      (mem_opcode === "b1101111".U) -> (ex_mem.MEM_PC + 4.U),
-      (mem_opcode === "b1100111".U) -> (ex_mem.MEM_PC + 4.U)
+      (mem_opcode === "b0000011".U) -> mem_data,              // Load
+      (mem_opcode === "b0110111".U) -> ex_mem.MEM_IMM,        // LUI
+      (mem_opcode === "b1101111".U) -> (ex_mem.MEM_PC + 4.U), // JAL
+      (mem_opcode === "b1100111".U) -> (ex_mem.MEM_PC + 4.U)  // JALR
     )
   )
 
