@@ -1,5 +1,6 @@
 package core.id
 
+import core.common._
 import chisel3._
 import chisel3.util._
 
@@ -37,14 +38,18 @@ class RV32ImmGen extends Module {
   imm := MuxCase(
     0.U,
     Seq(
-      (opcode === "b0010011".U) -> imm_i,
-      (opcode === "b0000011".U) -> imm_i,
-      (opcode === "b0100011".U) -> imm_s,
-      (opcode === "b1100011".U) -> imm_b,
-      (opcode === "b0110111".U) -> imm_u,
-      (opcode === "b0010111".U) -> imm_u,
-      (opcode === "b1101111".U) -> imm_j,
-      (opcode === "b1100111".U) -> imm_i
+      (opcode === OpCode.LOAD)     -> imm_i,
+      (opcode === OpCode.LOAD_FP)  -> imm_i,
+      (opcode === OpCode.MISC_MEM) -> imm_i,
+      (opcode === OpCode.OP_IMM)   -> imm_i,
+      (opcode === OpCode.JALR)     -> imm_i,
+      (opcode === OpCode.SYSTEM)   -> imm_i,
+      (opcode === OpCode.STORE)    -> imm_s,
+      (opcode === OpCode.STORE_FP) -> imm_s,
+      (opcode === OpCode.BRANCH)   -> imm_b,
+      (opcode === OpCode.LUI)      -> imm_u,
+      (opcode === OpCode.AUIPC)    -> imm_u,
+      (opcode === OpCode.JAL)      -> imm_j
     )
   )
 }

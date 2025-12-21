@@ -2,6 +2,22 @@ package core.common
 
 import chisel3._
 
+object OpCode {
+  val LOAD     = "b0000011".U(7.W)
+  val LOAD_FP  = "b0000111".U(7.W)
+  val MISC_MEM = "b0001111".U(7.W)
+  val OP_IMM   = "b0010011".U(7.W)
+  val AUIPC    = "b0010111".U(7.W)
+  val STORE    = "b0100011".U(7.W)
+  val STORE_FP = "b0100111".U(7.W)
+  val OP       = "b0110011".U(7.W)
+  val LUI      = "b0110111".U(7.W)
+  val BRANCH   = "b1100011".U(7.W)
+  val JALR     = "b1100111".U(7.W)
+  val JAL      = "b1101111".U(7.W)
+  val SYSTEM   = "b1110011".U(7.W)
+}
+
 object ALUOp extends ChiselEnum {
   val ADD  = 0.U(4.W)
   val SUB  = 1.U(4.W)
@@ -13,6 +29,7 @@ object ALUOp extends ChiselEnum {
   val SRA  = 7.U(4.W)
   val OR   = 8.U(4.W)
   val AND  = 9.U(4.W)
+  val COPY = 10.U(4.W)
 }
 
 object MemOp extends ChiselEnum {

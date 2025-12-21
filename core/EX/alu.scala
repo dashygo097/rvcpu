@@ -23,7 +23,7 @@ class RV32ALU extends Module {
       ALUOp.SRL  -> (rs1 >> rs2(4, 0)),
       ALUOp.SRA  -> (rs1.asSInt >> rs2(4, 0)).asUInt,
       ALUOp.OR   -> (rs1 | rs2),
-      ALUOp.AND  -> (rs1 & rs2)
+      ALUOp.AND  -> (rs1 & rs2),
     )
   )
 }
