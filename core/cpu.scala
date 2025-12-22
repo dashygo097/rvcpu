@@ -139,7 +139,7 @@ class RV32CPU extends Module {
   id_ex.ID_ALU_OP     := decoder.alu_op
   id_ex.ID_ALU_IS_SUB := decoder.alu_is_sub
   id_ex.ID_ALU_IS_SRA := decoder.alu_is_sra
-  id_ex.ID_MEM_CTRL   := decoder.mem_ctrl
+  id_ex.ID_MEM_OP     := decoder.mem_op
   id_ex.ID_REG_WRITE  := decoder.reg_write
   id_ex.ID_MEM_READ   := decoder.mem_read
   id_ex.ID_MEM_WRITE  := decoder.mem_write
@@ -227,7 +227,7 @@ class RV32CPU extends Module {
   // EX/MEM
   ex_mem.STALL         := false.B
   ex_mem.FLUSH         := false.B
-  ex_mem.EX_MEM_CTRL   := id_ex.EX_MEM_CTRL
+  ex_mem.EX_MEM_CTRL   := id_ex.EX_MEM_OP
   ex_mem.EX_REG_WRITE  := id_ex.EX_REG_WRITE
   ex_mem.EX_MEM_READ   := id_ex.EX_MEM_READ
   ex_mem.EX_MEM_WRITE  := id_ex.EX_MEM_WRITE

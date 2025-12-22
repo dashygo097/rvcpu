@@ -36,13 +36,16 @@ object BranchOp extends ChiselEnum {
   val BGEU = "b111".U(3.W)
 }
 
-object MemOp extends ChiselEnum {
-  val LB  = 0.U(3.W)
-  val LH  = 1.U(3.W)
-  val LW  = 2.U(3.W)
-  val LBU = 3.U(3.W)
-  val LHU = 4.U(3.W)
-  val SB  = 5.U(3.W)
-  val SH  = 6.U(3.W)
-  val SW  = 7.U(3.W)
+object LoadOp extends ChiselEnum {
+  val LB  = "b000".U(3.W)
+  val LH  = "b001".U(3.W)
+  val LW  = "b010".U(3.W)
+  val LBU = "b100".U(3.W)
+  val LHU = "b101".U(3.W)
+}
+
+object StoreOp extends ChiselEnum {
+  val SB = "b000".U(3.W)
+  val SH = "b001".U(3.W)
+  val SW = "b010".U(3.W)
 }

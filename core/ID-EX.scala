@@ -11,7 +11,7 @@ class ID_EX extends Module {
   val ID_ALU_OP     = IO(Input(UInt(3.W)))
   val ID_ALU_IS_SUB = IO(Input(Bool()))
   val ID_ALU_IS_SRA = IO(Input(Bool()))
-  val ID_MEM_CTRL   = IO(Input(UInt(3.W)))
+  val ID_MEM_OP     = IO(Input(UInt(3.W)))
   val ID_REG_WRITE  = IO(Input(Bool()))
   val ID_MEM_READ   = IO(Input(Bool()))
   val ID_MEM_WRITE  = IO(Input(Bool()))
@@ -44,7 +44,7 @@ class ID_EX extends Module {
   val EX_ALU_OP     = IO(Output(UInt(3.W)))
   val EX_ALU_IS_SUB = IO(Output(Bool()))
   val EX_ALU_IS_SRA = IO(Output(Bool()))
-  val EX_MEM_CTRL   = IO(Output(UInt(3.W)))
+  val EX_MEM_OP     = IO(Output(UInt(3.W)))
   val EX_REG_WRITE  = IO(Output(Bool()))
   val EX_MEM_READ   = IO(Output(Bool()))
   val EX_MEM_WRITE  = IO(Output(Bool()))
@@ -76,7 +76,7 @@ class ID_EX extends Module {
   val alu_op_reg     = RegInit(0.U(3.W))
   val alu_is_sub_reg = RegInit(false.B)
   val alu_is_sra_reg = RegInit(false.B)
-  val mem_ctrl_reg   = RegInit(0.U(3.W))
+  val mem_op_reg     = RegInit(0.U(3.W))
   val reg_write_reg  = RegInit(false.B)
   val mem_read_reg   = RegInit(false.B)
   val mem_write_reg  = RegInit(false.B)
@@ -108,7 +108,7 @@ class ID_EX extends Module {
     alu_op_reg     := 0.U
     alu_is_sub_reg := false.B
     alu_is_sra_reg := false.B
-    mem_ctrl_reg   := 0.U
+    mem_op_reg     := 0.U
     reg_write_reg  := false.B
     mem_read_reg   := false.B
     mem_write_reg  := false.B
@@ -140,7 +140,7 @@ class ID_EX extends Module {
     alu_op_reg     := ID_ALU_OP
     alu_is_sub_reg := ID_ALU_IS_SUB
     alu_is_sra_reg := ID_ALU_IS_SRA
-    mem_ctrl_reg   := ID_MEM_CTRL
+    mem_op_reg     := ID_MEM_OP
     reg_write_reg  := ID_REG_WRITE
     mem_read_reg   := ID_MEM_READ
     mem_write_reg  := ID_MEM_WRITE
@@ -172,7 +172,7 @@ class ID_EX extends Module {
   EX_ALU_OP     := alu_op_reg
   EX_ALU_IS_SUB := alu_is_sub_reg
   EX_ALU_IS_SRA := alu_is_sra_reg
-  EX_MEM_CTRL   := mem_ctrl_reg
+  EX_MEM_OP     := mem_op_reg
   EX_REG_WRITE  := reg_write_reg
   EX_MEM_READ   := mem_read_reg
   EX_MEM_WRITE  := mem_write_reg

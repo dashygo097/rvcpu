@@ -44,7 +44,7 @@ class RV32Decoder extends Module {
   val alu_is_sub = IO(Output(Bool()))
   val alu_is_sra = IO(Output(Bool()))
 
-  val mem_ctrl     = IO(Output(UInt(3.W)))
+  val mem_op       = IO(Output(UInt(3.W)))
   val mem_width    = IO(Output(UInt(2.W)))
   val mem_sign_ext = IO(Output(Bool()))
 
@@ -115,7 +115,7 @@ class RV32Decoder extends Module {
     )
   )
   branch_op    := funct3_decoder.branch_op
-  mem_ctrl     := funct3_decoder.mem_op
+  mem_op       := funct3_decoder.mem_op
   mem_width    := funct3_decoder.mem_width
   mem_sign_ext := funct3_decoder.mem_sign_ext
 

@@ -1,8 +1,6 @@
 package core.id
 
-import core.common._
 import chisel3._
-import chisel3.util._
 
 class RV32Funct3Decoder extends Module {
   override def desiredName: String = "rv32_funct3_decoder"
@@ -25,27 +23,7 @@ class RV32Funct3Decoder extends Module {
   branch_op := funct3
 
   // Load/Store
-  mem_op := MuxCase(
-    MemOp.LW,
-    Seq(
-      (opcode === OpCode.LOAD)  -> MuxLookup(funct3, MemOp.LW)(
-        Seq(
-          "b000".U -> MemOp.LB,  // LB
-          "b001".U -> MemOp.LH,  // LH
-          "b010".U -> MemOp.LW,  // LW
-          "b100".U -> MemOp.LBU, // LBU
-          "b101".U -> MemOp.LHU  // LHU
-        )
-      ),
-      (opcode === OpCode.STORE) -> MuxLookup(funct3, MemOp.SW)(
-        Seq(
-          "b000".U -> MemOp.SB, // SB
-          "b001".U -> MemOp.SH, // SH
-          "b010".U -> MemOp.SW  // SW
-        )
-      )
-    )
-  )
+  mem_op := funct3
 
   // Memory width
   mem_width := funct3(1, 0)
