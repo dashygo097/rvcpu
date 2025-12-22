@@ -29,11 +29,12 @@ class RV32CPU extends Module {
   val DEBUG_REG_DATA = IO(Output(UInt(32.W)))
 
   // Modules
-  val alu                = Module(new RV32ALU)
-  val decoder            = Module(new RV32Decoder)
-  val imm_gen            = Module(new RV32ImmGen)
-  val regfile            = Module(new RV32RegFile)
-  val id_forwarding_unit = Module(new RV32IDForwardingUnit)
+  val alu                 = Module(new RV32ALU)
+  val decoder             = Module(new RV32Decoder)
+  val imm_gen             = Module(new RV32ImmGen)
+  val regfile             = Module(new RV32RegFile)
+  val id_forwarding_unit  = Module(new RV32IDForwardingUnit)
+  val exe_forwarding_unit = Module(new RV32EXForwardingUnit)
 
   // Pipeline
   val if_id  = Module(new IF_ID)
@@ -68,7 +69,7 @@ class RV32CPU extends Module {
   regfile.rs1_addr := decoder.rs1
   regfile.rs2_addr := decoder.rs2
 
-  // Forwarding and hazard detection
+  // Data forwarding
   id_forwarding_unit.id_rs1        := decoder.rs1
   id_forwarding_unit.id_rs2        := decoder.rs2
   id_forwarding_unit.ex_rd         := id_ex.EX_RD
@@ -78,23 +79,6 @@ class RV32CPU extends Module {
   id_forwarding_unit.wb_rd         := mem_wb.WB_RD
   id_forwarding_unit.wb_reg_write  := mem_wb.WB_REG_WRITE
 
-  // Load-use hazard detection
-  val load_use_hazard    = id_ex.EX_MEM_READ &&
-    ((id_ex.EX_RD === decoder.rs1) || (id_ex.EX_RD === decoder.rs2)) &&
-    (id_ex.EX_RD =/= 0.U)
-  val branch_load_hazard = (decoder.is_branch || decoder.is_jalr) &&
-    id_ex.EX_MEM_READ &&
-    ((id_ex.EX_RD === decoder.rs1) || (id_ex.EX_RD === decoder.rs2)) &&
-    (id_ex.EX_RD =/= 0.U)
-  val branch_ex_hazard   = (decoder.is_branch || decoder.is_jalr) &&
-    id_ex.EX_REG_WRITE &&
-    !id_ex.EX_MEM_READ &&
-    ((id_ex.EX_RD === decoder.rs1) || (decoder.is_branch && id_ex.EX_RD === decoder.rs2)) &&
-    (id_ex.EX_RD =/= 0.U)
-
-  stall := load_use_hazard || branch_load_hazard || branch_ex_hazard
-
-  // Forwarded register values for branch comparison
   val id_rs1_data = MuxCase(
     regfile.rs1_data,
     Seq(
@@ -110,6 +94,23 @@ class RV32CPU extends Module {
     )
   )
 
+  // hazard detection
+  val load_use_hazard    = id_ex.EX_MEM_READ &&
+    ((id_ex.EX_RD === decoder.rs1) || (id_ex.EX_RD === decoder.rs2)) &&
+    (id_ex.EX_RD =/= 0.U)
+  val branch_load_hazard = (decoder.is_branch || decoder.is_jalr) &&
+    id_ex.EX_MEM_READ &&
+    ((id_ex.EX_RD === decoder.rs1) || (id_ex.EX_RD === decoder.rs2)) &&
+    (id_ex.EX_RD =/= 0.U)
+  val branch_ex_hazard   = (decoder.is_branch || decoder.is_jalr) &&
+    id_ex.EX_REG_WRITE &&
+    !id_ex.EX_MEM_READ &&
+    ((id_ex.EX_RD === decoder.rs1) || (decoder.is_branch && id_ex.EX_RD === decoder.rs2)) &&
+    (id_ex.EX_RD =/= 0.U)
+
+  stall := load_use_hazard || branch_load_hazard || branch_ex_hazard
+
+  // Branch decision
   val id_branch_taken = MuxCase(
     false.B,
     Seq(
@@ -160,38 +161,41 @@ class RV32CPU extends Module {
 
   // EX Stage
 
-  // ALU source selection with forwarding
-  val ex_rs1_data_forwarded = Mux(
-    ex_mem.MEM_REG_WRITE && (ex_mem.MEM_RD === id_ex.EX_RS1) && (ex_mem.MEM_RD =/= 0.U),
-    ex_mem.MEM_ALU_RESULT,
-    Mux(
-      mem_wb.WB_REG_WRITE && (mem_wb.WB_RD === id_ex.EX_RS1) && (mem_wb.WB_RD =/= 0.U),
-      mem_wb.WB_DATA,
-      id_ex.EX_RS1_DATA
+  // Data forwarding
+  exe_forwarding_unit.ex_rs1        := id_ex.EX_RS1
+  exe_forwarding_unit.ex_rs2        := id_ex.EX_RS2
+  exe_forwarding_unit.mem_rd        := ex_mem.MEM_RD
+  exe_forwarding_unit.mem_reg_write := ex_mem.MEM_REG_WRITE
+  exe_forwarding_unit.wb_rd         := mem_wb.WB_RD
+  exe_forwarding_unit.wb_reg_write  := mem_wb.WB_REG_WRITE
+
+  val ex_rs1_data = MuxCase(
+    id_ex.EX_RS1_DATA,
+    Seq(
+      (exe_forwarding_unit.forward_rs1 === ForwardingStage.MEM) -> ex_mem.MEM_ALU_RESULT,
+      (exe_forwarding_unit.forward_rs1 === ForwardingStage.WB)  -> mem_wb.WB_DATA
+    )
+  )
+  val ex_rs2_data = MuxCase(
+    id_ex.EX_RS2_DATA,
+    Seq(
+      (exe_forwarding_unit.forward_rs2 === ForwardingStage.MEM) -> ex_mem.MEM_ALU_RESULT,
+      (exe_forwarding_unit.forward_rs2 === ForwardingStage.WB)  -> mem_wb.WB_DATA
     )
   )
 
-  val ex_rs2_data_forwarded = Mux(
-    ex_mem.MEM_REG_WRITE && (ex_mem.MEM_RD === id_ex.EX_RS2) && (ex_mem.MEM_RD =/= 0.U),
-    ex_mem.MEM_ALU_RESULT,
-    Mux(
-      mem_wb.WB_REG_WRITE && (mem_wb.WB_RD === id_ex.EX_RS2) && (mem_wb.WB_RD =/= 0.U),
-      mem_wb.WB_DATA,
-      id_ex.EX_RS2_DATA
-    )
-  )
-
+  // ALU
   val alu_rs1_data = MuxCase(
-    ex_rs1_data_forwarded,
+    ex_rs1_data,
     Seq(
       id_ex.EX_IS_AUIPC -> id_ex.EX_PC,
       id_ex.EX_IS_JAL   -> id_ex.EX_PC,
-      id_ex.EX_IS_JALR  -> ex_rs1_data_forwarded
+      id_ex.EX_IS_JALR  -> ex_rs1_data
     )
   )
 
   val alu_rs2_data = MuxCase(
-    ex_rs2_data_forwarded,
+    ex_rs2_data,
     Seq(
       id_ex.EX_IS_ALU_IMM -> id_ex.EX_IMM,
       id_ex.EX_IS_LOAD    -> id_ex.EX_IMM,
@@ -217,7 +221,7 @@ class RV32CPU extends Module {
   ex_mem.EX_MEM_READ   := id_ex.EX_MEM_READ
   ex_mem.EX_MEM_WRITE  := id_ex.EX_MEM_WRITE
   ex_mem.EX_ALU_RESULT := alu.rd_data
-  ex_mem.EX_RS2_DATA   := ex_rs2_data_forwarded
+  ex_mem.EX_RS2_DATA   := ex_rs2_data
   ex_mem.EX_RD         := id_ex.EX_RD
   ex_mem.EX_FUNCT3     := id_ex.EX_FUNCT3
   ex_mem.EX_PC         := id_ex.EX_PC
