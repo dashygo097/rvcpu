@@ -168,10 +168,6 @@ class RV32CPU extends Module {
   id_ex.ID_OPCODE   := decoder.opcode
 
   // EX Stage
-  val ex_opcode = id_ex.EX_OPCODE
-  val ex_pc     = id_ex.EX_PC
-  val ex_inst   = id_ex.EX_INST
-  val ex_imm    = id_ex.EX_IMM
 
   // ALU source selection with forwarding
   val ex_rs1_data_forwarded = Mux(
@@ -197,8 +193,8 @@ class RV32CPU extends Module {
   val ex_alu_src1 = MuxCase(
     ex_rs1_data_forwarded,
     Seq(
-      id_ex.EX_IS_AUIPC -> ex_pc,
-      id_ex.EX_IS_JAL   -> ex_pc,
+      id_ex.EX_IS_AUIPC -> id_ex.EX_PC,
+      id_ex.EX_IS_JAL   -> id_ex.EX_PC,
       id_ex.EX_IS_JALR  -> ex_rs1_data_forwarded
     )
   )
@@ -206,11 +202,11 @@ class RV32CPU extends Module {
   val ex_alu_src2 = MuxCase(
     ex_rs2_data_forwarded,
     Seq(
-      id_ex.EX_IS_ALU_IMM -> ex_imm,
-      id_ex.EX_IS_LOAD    -> ex_imm,
-      id_ex.EX_IS_STORE   -> ex_imm,
+      id_ex.EX_IS_ALU_IMM -> id_ex.EX_IMM,
+      id_ex.EX_IS_LOAD    -> id_ex.EX_IMM,
+      id_ex.EX_IS_STORE   -> id_ex.EX_IMM,
       id_ex.EX_IS_LUI     -> 0.U,
-      id_ex.EX_IS_AUIPC   -> ex_imm,
+      id_ex.EX_IS_AUIPC   -> id_ex.EX_IMM,
       id_ex.EX_IS_JAL     -> 4.U,
       id_ex.EX_IS_JALR    -> 4.U
     )
@@ -235,10 +231,10 @@ class RV32CPU extends Module {
   ex_mem.EX_RS2_DATA   := ex_rs2_data_forwarded
   ex_mem.EX_RD         := id_ex.EX_RD
   ex_mem.EX_FUNCT3     := id_ex.EX_FUNCT3
-  ex_mem.EX_PC         := ex_pc
-  ex_mem.EX_OPCODE     := ex_opcode
-  ex_mem.EX_INST       := ex_inst
-  ex_mem.EX_IMM        := ex_imm
+  ex_mem.EX_PC         := id_ex.EX_PC
+  ex_mem.EX_OPCODE     := id_ex.EX_OPCODE
+  ex_mem.EX_INST       := id_ex.EX_INST
+  ex_mem.EX_IMM        := id_ex.EX_IMM
 
   // MEM Stage
   val mem_opcode     = ex_mem.MEM_OPCODE
@@ -254,29 +250,29 @@ class RV32CPU extends Module {
   val mem_byte_addr          = mem_alu_result(1, 0)
   val mem_aligned_write_data = MuxLookup(mem_funct3, mem_rs2_data)(
     Seq(
-      "b000".U -> (mem_rs2_data << (mem_byte_addr << 3)),    // SB
-      "b001".U -> (mem_rs2_data << (mem_byte_addr(1) << 4)), // SH
-      "b010".U -> mem_rs2_data                               // SW
+      StoreOp.SB -> (mem_rs2_data << (mem_byte_addr << 3)),
+      StoreOp.SH -> (mem_rs2_data << (mem_byte_addr(1) << 4)),
+      StoreOp.SW -> mem_rs2_data
     )
   )
   DMEM_WRITE_DATA := mem_aligned_write_data
 
   DMEM_WRITE_STRB := MuxLookup(mem_funct3, 0.U)(
     Seq(
-      "b000".U -> ("b0001".U << mem_byte_addr),           // SB
-      "b001".U -> ("b0011".U << (mem_byte_addr(1) << 1)), // SH
-      "b010".U -> "b1111".U                               // SW
+      StoreOp.SB -> ("b0001".U << mem_byte_addr),
+      StoreOp.SH -> ("b0011".U << (mem_byte_addr(1) << 1)),
+      StoreOp.SW -> "b1111".U
     )
   )
 
   val mem_shifted_read_data = DMEM_READ_DATA >> (mem_byte_addr << 3)
   val mem_data              = MuxLookup(mem_funct3, 0.U)(
     Seq(
-      "b000".U -> Cat(Fill(24, mem_shifted_read_data(7)), mem_shifted_read_data(7, 0)),   // LB
-      "b001".U -> Cat(Fill(16, mem_shifted_read_data(15)), mem_shifted_read_data(15, 0)), // LH
-      "b010".U -> DMEM_READ_DATA,                                                         // LW
-      "b100".U -> Cat(Fill(24, 0.U), mem_shifted_read_data(7, 0)),                        // LBU
-      "b101".U -> Cat(Fill(16, 0.U), mem_shifted_read_data(15, 0))                        // LHU
+      LoadOp.LB  -> Cat(Fill(24, mem_shifted_read_data(7)), mem_shifted_read_data(7, 0)),
+      LoadOp.LH  -> Cat(Fill(16, mem_shifted_read_data(15)), mem_shifted_read_data(15, 0)),
+      LoadOp.LW  -> DMEM_READ_DATA,
+      LoadOp.LBU -> Cat(Fill(24, 0.U), mem_shifted_read_data(7, 0)),
+      LoadOp.LHU -> Cat(Fill(16, 0.U), mem_shifted_read_data(15, 0))
     )
   )
 
