@@ -10,15 +10,9 @@ class RV32Funct7Decoder extends Module {
   val funct3 = IO(Input(UInt(3.W))).suggestName("FUNCT3")
   val funct7 = IO(Input(UInt(7.W))).suggestName("FUNCT7")
 
-  // R-Type ALU
-  val alu_op_r = IO(Output(UInt(3.W))).suggestName("ALU_OP_R")
-
   // Determine if the instruction is SUB or SRA
   val alu_is_sub = IO(Output(Bool())).suggestName("IS_ALU_SUB")
   val alu_is_sra = IO(Output(Bool())).suggestName("IS_ALU_SRA")
-
-  // Default assignment
-  alu_op_r := funct3
 
   // Identify specific instructions
   alu_is_sub := (funct3 === ALUOp.ADD) && (funct7 === "b0100000".U)

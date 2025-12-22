@@ -4,12 +4,10 @@ import chisel3._
 
 object OpCode {
   val LOAD     = "b0000011".U(7.W)
-  val LOAD_FP  = "b0000111".U(7.W)
   val MISC_MEM = "b0001111".U(7.W)
   val OP_IMM   = "b0010011".U(7.W)
   val AUIPC    = "b0010111".U(7.W)
   val STORE    = "b0100011".U(7.W)
-  val STORE_FP = "b0100111".U(7.W)
   val OP       = "b0110011".U(7.W)
   val LUI      = "b0110111".U(7.W)
   val BRANCH   = "b1100011".U(7.W)

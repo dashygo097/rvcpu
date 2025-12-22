@@ -8,7 +8,7 @@ class ID_EX extends Module {
   val FLUSH                        = IO(Input(Bool()))
 
   // Control signals
-  val ID_ALU_OP_R   = IO(Input(UInt(3.W)))
+  val ID_ALU_OP     = IO(Input(UInt(3.W)))
   val ID_ALU_IS_SUB = IO(Input(Bool()))
   val ID_ALU_IS_SRA = IO(Input(Bool()))
   val ID_MEM_CTRL   = IO(Input(UInt(3.W)))
@@ -41,7 +41,7 @@ class ID_EX extends Module {
   val ID_OPCODE   = IO(Input(UInt(7.W)))
 
   // Outputs to EX stage
-  val EX_ALU_OP_R   = IO(Output(UInt(3.W)))
+  val EX_ALU_OP     = IO(Output(UInt(3.W)))
   val EX_ALU_IS_SUB = IO(Output(Bool()))
   val EX_ALU_IS_SRA = IO(Output(Bool()))
   val EX_MEM_CTRL   = IO(Output(UInt(3.W)))
@@ -73,7 +73,7 @@ class ID_EX extends Module {
   val EX_OPCODE   = IO(Output(UInt(7.W)))
 
   // Registers
-  val alu_op_r_reg   = RegInit(0.U(3.W))
+  val alu_op_reg     = RegInit(0.U(3.W))
   val alu_is_sub_reg = RegInit(false.B)
   val alu_is_sra_reg = RegInit(false.B)
   val mem_ctrl_reg   = RegInit(0.U(3.W))
@@ -105,7 +105,7 @@ class ID_EX extends Module {
   val opcode_reg   = RegInit(0.U(7.W))
 
   when(FLUSH) {
-    alu_op_r_reg   := 0.U
+    alu_op_reg     := 0.U
     alu_is_sub_reg := false.B
     alu_is_sra_reg := false.B
     mem_ctrl_reg   := 0.U
@@ -137,7 +137,7 @@ class ID_EX extends Module {
     opcode_reg   := 0.U
 
   }.elsewhen(!STALL) {
-    alu_op_r_reg   := ID_ALU_OP_R
+    alu_op_reg     := ID_ALU_OP
     alu_is_sub_reg := ID_ALU_IS_SUB
     alu_is_sra_reg := ID_ALU_IS_SRA
     mem_ctrl_reg   := ID_MEM_CTRL
@@ -169,7 +169,7 @@ class ID_EX extends Module {
     opcode_reg   := ID_OPCODE
   }
 
-  EX_ALU_OP_R   := alu_op_r_reg
+  EX_ALU_OP     := alu_op_reg
   EX_ALU_IS_SUB := alu_is_sub_reg
   EX_ALU_IS_SRA := alu_is_sra_reg
   EX_MEM_CTRL   := mem_ctrl_reg

@@ -136,7 +136,7 @@ class RV32CPU extends Module {
   // ID/EX
   id_ex.STALL         := stall
   id_ex.FLUSH         := flush || stall
-  id_ex.ID_ALU_OP_R   := decoder.alu_op_r
+  id_ex.ID_ALU_OP     := decoder.alu_op
   id_ex.ID_ALU_IS_SUB := decoder.alu_is_sub
   id_ex.ID_ALU_IS_SRA := decoder.alu_is_sra
   id_ex.ID_MEM_CTRL   := decoder.mem_ctrl
@@ -174,19 +174,23 @@ class RV32CPU extends Module {
   val ex_imm    = id_ex.EX_IMM
 
   // ALU source selection with forwarding
-  val ex_rs1_data_forwarded = MuxCase(
-    id_ex.EX_RS1_DATA,
-    Seq(
-      (mem_wb.WB_REG_WRITE && (mem_wb.WB_RD === id_ex.EX_RS1) && (mem_wb.WB_RD =/= 0.U))    -> mem_wb.WB_DATA,
-      (ex_mem.MEM_REG_WRITE && (ex_mem.MEM_RD === id_ex.EX_RS1) && (ex_mem.MEM_RD =/= 0.U)) -> ex_mem.MEM_ALU_RESULT,
+  val ex_rs1_data_forwarded = Mux(
+    ex_mem.MEM_REG_WRITE && (ex_mem.MEM_RD === id_ex.EX_RS1) && (ex_mem.MEM_RD =/= 0.U),
+    ex_mem.MEM_ALU_RESULT,
+    Mux(
+      mem_wb.WB_REG_WRITE && (mem_wb.WB_RD === id_ex.EX_RS1) && (mem_wb.WB_RD =/= 0.U),
+      mem_wb.WB_DATA,
+      id_ex.EX_RS1_DATA
     )
   )
 
-  val ex_rs2_data_forwarded = MuxCase(
-    id_ex.EX_RS2_DATA,
-    Seq(
-      (mem_wb.WB_REG_WRITE && (mem_wb.WB_RD === id_ex.EX_RS2) && (mem_wb.WB_RD =/= 0.U))    -> mem_wb.WB_DATA,
-      (ex_mem.MEM_REG_WRITE && (ex_mem.MEM_RD === id_ex.EX_RS2) && (ex_mem.MEM_RD =/= 0.U)) -> ex_mem.MEM_ALU_RESULT,
+  val ex_rs2_data_forwarded = Mux(
+    ex_mem.MEM_REG_WRITE && (ex_mem.MEM_RD === id_ex.EX_RS2) && (ex_mem.MEM_RD =/= 0.U),
+    ex_mem.MEM_ALU_RESULT,
+    Mux(
+      mem_wb.WB_REG_WRITE && (mem_wb.WB_RD === id_ex.EX_RS2) && (mem_wb.WB_RD =/= 0.U),
+      mem_wb.WB_DATA,
+      id_ex.EX_RS2_DATA
     )
   )
 
@@ -214,15 +218,7 @@ class RV32CPU extends Module {
 
   alu.rs1        := ex_alu_src1
   alu.rs2        := ex_alu_src2
-  alu.alu_op_r   := MuxCase(
-    id_ex.EX_ALU_OP_R,
-    Seq(
-      id_ex.EX_IS_LUI   -> ALUOp.ADD,
-      id_ex.EX_IS_AUIPC -> ALUOp.ADD,
-      id_ex.EX_IS_JAL   -> ALUOp.ADD,
-      id_ex.EX_IS_JALR  -> ALUOp.ADD
-    )
-  )
+  alu.alu_op     := id_ex.EX_ALU_OP
   alu.is_alu_sub := id_ex.EX_ALU_IS_SUB
   alu.is_alu_sra := id_ex.EX_ALU_IS_SRA
 

@@ -1,6 +1,8 @@
 package core.id
 
+import core.common._
 import chisel3._
+import chisel3.util._
 
 class RV32Decoder extends Module {
   override def desiredName: String = "rv32_decoder"
@@ -38,7 +40,7 @@ class RV32Decoder extends Module {
   val is_fence   = IO(Output(Bool())).suggestName("IS_FENCE")
 
   // control signals
-  val alu_op_r   = IO(Output(UInt(3.W)))
+  val alu_op     = IO(Output(UInt(3.W)))
   val alu_is_sub = IO(Output(Bool()))
   val alu_is_sra = IO(Output(Bool()))
 
@@ -98,8 +100,20 @@ class RV32Decoder extends Module {
   // funct3 decoder
   funct3_decoder.opcode := opcode
   funct3_decoder.funct3 := funct3
-  funct3_decoder.funct7 := funct7
 
+  alu_op       := MuxCase(
+    ALUOp.ADD,
+    Seq(
+      is_alu     -> funct3_decoder.alu_op,
+      is_alu_imm -> funct3,
+      is_load    -> ALUOp.ADD,
+      is_store   -> ALUOp.ADD,
+      is_lui     -> ALUOp.ADD,
+      is_auipc   -> ALUOp.ADD,
+      is_jal     -> ALUOp.ADD,
+      is_jalr    -> ALUOp.ADD
+    )
+  )
   branch_op    := funct3_decoder.branch_op
   mem_ctrl     := funct3_decoder.mem_op
   mem_width    := funct3_decoder.mem_width
@@ -111,7 +125,6 @@ class RV32Decoder extends Module {
   funct7_decoder.funct7 := funct7
 
   // ALU control signal
-  alu_op_r   := funct7_decoder.alu_op_r
   alu_is_sub := funct7_decoder.alu_is_sub
   alu_is_sra := funct7_decoder.alu_is_sra
 }

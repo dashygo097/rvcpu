@@ -14,9 +14,9 @@ class RV32ALU extends Module {
   // control signals
   val is_alu_sub = IO(Input(Bool())).suggestName("IS_ALU_SUB")
   val is_alu_sra = IO(Input(Bool())).suggestName("IS_ALU_SRA")
-  val alu_op_r   = IO(Input(UInt(3.W))).suggestName("ALU_CTRL")
+  val alu_op     = IO(Input(UInt(3.W))).suggestName("ALU_OP")
 
-  rd := MuxLookup(alu_op_r, 0.U)(
+  rd := MuxLookup(alu_op, 0.U)(
     Seq(
       ALUOp.ADD  -> Mux(is_alu_sub, rs1 - rs2, rs1 + rs2),
       ALUOp.SLL  -> (rs1 << rs2(4, 0)),
