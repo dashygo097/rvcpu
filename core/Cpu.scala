@@ -83,7 +83,7 @@ class RV32CPU extends Module {
   val id_rs1_data = MuxLookup(id_fwd_unit.forward_rs1, 0.U(32.W))(
     Seq(
       ForwardingStage.SAFE -> regfile.rs1_data,
-      ForwardingStage.EX   -> alu.result,
+      ForwardingStage.EX   -> alu.packet_ext.RESULT,
       ForwardingStage.MEM  -> ex_mem.MEM_ALU_RESULT,
       ForwardingStage.WB   -> mem_wb.WB_DATA
     )
@@ -91,7 +91,7 @@ class RV32CPU extends Module {
   val id_rs2_data = MuxLookup(id_fwd_unit.forward_rs2, 0.U(32.W))(
     Seq(
       ForwardingStage.SAFE -> regfile.rs2_data,
-      ForwardingStage.EX   -> alu.result,
+      ForwardingStage.EX   -> alu.packet_ext.RESULT,
       ForwardingStage.MEM  -> ex_mem.MEM_ALU_RESULT,
       ForwardingStage.WB   -> mem_wb.WB_DATA
     )
@@ -204,11 +204,11 @@ class RV32CPU extends Module {
     )
   )
 
-  alu.rs1_data   := alu_rs1_data
-  alu.rs2_data   := alu_rs2_data
-  alu.alu_op     := id_ex.EX_ALU_OP
-  alu.alu_is_sub := id_ex.EX_ALU_IS_SUB
-  alu.alu_is_sra := id_ex.EX_ALU_IS_SRA
+  alu.ctrl_ext.SRC1   := alu_rs1_data
+  alu.ctrl_ext.SRC2   := alu_rs2_data
+  alu.ctrl_ext.OP     := id_ex.EX_ALU_OP
+  alu.ctrl_ext.IS_SUB := id_ex.EX_ALU_IS_SUB
+  alu.ctrl_ext.IS_SRA := id_ex.EX_ALU_IS_SRA
 
   // EX/MEM
   ex_mem.STALL := false.B
@@ -225,7 +225,7 @@ class RV32CPU extends Module {
   ex_mem.EX_IS_JAL   := id_ex.EX_IS_JAL
   ex_mem.EX_IS_JALR  := id_ex.EX_IS_JALR
 
-  ex_mem.EX_ALU_RESULT := alu.result
+  ex_mem.EX_ALU_RESULT := alu.packet_ext.RESULT
   ex_mem.EX_RS2_DATA   := ex_rs2_data
   ex_mem.EX_RD         := id_ex.EX_RD
   ex_mem.EX_FUNCT3     := id_ex.EX_FUNCT3
