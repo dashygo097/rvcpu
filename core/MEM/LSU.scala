@@ -3,60 +3,14 @@ package core.mem
 import chisel3._
 import chisel3.util._
 
-/*
- *
- *package core.mem
-
-import chisel3._
-
-class RV32LSUCtrlIO extends Bundle {
-  val addr    = Input(UInt(32.W))
-  val data    = Input(UInt(32.W))
-  val signed  = Input(Bool())
-  val size    = Input(UInt(2.W)) // 00: byte, 01: half, 10: word
-  val is_load  = Input(Bool())
-  val is_store = Input(Bool())
-}
-
-class RV32LSUCtrlExtIO extends Bundle {
-  val ADDR     = Input(UInt(32.W))
-  val DATA     = Input(UInt(32.W))
-  val SIGNED   = Input(Bool())
-  val SIZE     = Input(UInt(2.W)) // 00: byte, 01: half, 10: word
-  val IS_LOAD  = Input(Bool())
-  val IS_STORE = Input(Bool())
-
-  def connect(intf: RV32LSUCtrlIO): Unit = {
-    intf.addr    := ADDR
-    intf.data    := DATA
-    intf.signed  := SIGNED
-    intf.size    := SIZE
-    intf.is_load  := IS_LOAD
-    intf.is_store := IS_STORE
-  }
-}
-
-class RV32LSUPacketIO extends Bundle {
-  val data = Output(UInt(32.W))
-}
-
-class RV32LSUPacketExtIO extends Bundle {
-  val DATA = Output(UInt(32.W))
-
-  def connect(intf: RV32LSUPacketIO): Unit =
-    DATA := intf.data
-}
- *
- */
-
 class RV32LSU extends Module {
   override def desiredName: String = s"rv32_lsu"
 
   // External Interfaces
   val dmem_addr = IO(Output(UInt(32.W))).suggestName("DMEM_ADDR")
-  val dmem_strb = IO(Output(UInt(4.W))).suggestName("DMEM_WRITE_STRB")
 
   val dmem_write_data = IO(Output(UInt(32.W))).suggestName("DMEM_WRITE_DATA")
+  val dmem_write_strb = IO(Output(UInt(4.W))).suggestName("DMEM_WRITE_STRB")
   val dmem_write_en   = IO(Output(Bool())).suggestName("DMEM_WRITE_EN")
 
   val dmem_read_data = IO(Input(UInt(32.W))).suggestName("DMEM_READ_DATA")
@@ -78,8 +32,8 @@ class RV32LSU extends Module {
   val strb         = Wire(UInt(4.W))
 
   // Connections
-  dmem_addr := ctrl.addr
-  dmem_strb := strb
+  dmem_addr       := ctrl.addr
+  dmem_write_strb := strb
 
   dmem_write_data := aligned_data
   dmem_write_en   := ctrl.is_store

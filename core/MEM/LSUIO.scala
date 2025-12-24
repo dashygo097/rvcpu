@@ -16,8 +16,8 @@ class RV32LSUCtrlExtIO extends Bundle {
   val DATA     = Input(UInt(32.W))
   val SIGNED   = Input(Bool())
   val SIZE     = Input(UInt(2.W)) // 00: byte, 01: half, 10: word
-  val IS_LOAD  = Input(Bool())
   val IS_STORE = Input(Bool())
+  val IS_LOAD  = Input(Bool())
 
   def connect(intf: RV32LSUCtrlIO): Unit = {
     intf.addr     := ADDR
