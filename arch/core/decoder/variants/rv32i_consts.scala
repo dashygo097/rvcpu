@@ -1,14 +1,11 @@
 package arch.core.decoder
 
-import arch.core.alu._
+import arch.core.common.Consts
+import arch.core.alu.RV32IALUConsts
+import arch.core.lsu.RV32ILSUConsts
 import chisel3.util.BitPat
 
-trait RV32IDecodeConsts extends RV32IALUConsts {
-  // Utility
-  def X = BitPat("b?")
-  def N = BitPat("b0")
-  def Y = BitPat("b1")
-
+trait RV32IDecodeConsts extends Consts with RV32IALUConsts with RV32ILSUConsts {
   // Branch
   def BR_X   = BitPat("b???")
   val SZ_BR  = BR_X.getWidth
@@ -29,16 +26,4 @@ trait RV32IDecodeConsts extends RV32IALUConsts {
   def IMM_B  = BitPat("b010")
   def IMM_U  = BitPat("b011")
   def IMM_J  = BitPat("b100")
-
-  // LSU
-  def M_X   = BitPat("b???")
-  val SZ_M  = M_X.getWidth
-  def M_SB  = BitPat("b000")
-  def M_SH  = BitPat("b001")
-  def M_SW  = BitPat("b010")
-  def M_LB  = BitPat("b011")
-  def M_LH  = BitPat("b100")
-  def M_LW  = BitPat("b101")
-  def M_LBU = BitPat("b110")
-  def M_LHU = BitPat("b111")
 }

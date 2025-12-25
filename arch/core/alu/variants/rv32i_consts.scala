@@ -1,8 +1,9 @@
 package arch.core.alu
 
+import arch.core.common.Consts
 import chisel3.util.BitPat
 
-trait RV32IALUConsts {
+trait RV32IALUConsts extends Consts {
   // ALU
   def A1_X    = BitPat("b??")
   val SZ_A1   = A1_X.getWidth
