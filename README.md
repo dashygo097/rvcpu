@@ -1,4 +1,4 @@
-# rvcpu
+# risc
 
 ###### NOTE: THIS REPO IS STILL UNDER DEVELOPMENT.
 
